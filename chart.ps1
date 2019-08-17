@@ -67,6 +67,9 @@ $Chart.Series[$item].BorderWidth = 12
             
 $Chart.Series[$item]["DrawingStyle"] = "lighttodark"
 $Chart.Series[$item]["pointwidth"] = "2"
+$Chart.Width=1920
+$Chart.Height=1080
+
 
 #Build the GUI
 [xml]$xaml = @"
@@ -77,7 +80,7 @@ $Chart.Series[$item]["pointwidth"] = "2"
     xmlns:wfc="clr-namespace:System.Windows.Forms.DataVisualization.Charting;assembly=System.Windows.Forms.DataVisualization"
     Width = "800" Height = "600" ShowInTaskbar = "True">
     <DockPanel>
-    <StackPanel DockPanel.Dock="Right">
+    <StackPanel x:Name="SP" DockPanel.Dock="Right">
         <Label  Background="LightGray"
                Content="search image"
                 VerticalAlignment="Top"/>
@@ -88,8 +91,8 @@ $Chart.Series[$item]["pointwidth"] = "2"
         <Button x:Name="button2" Content="search" MinHeight = "20"/>
 
         <ListBox x:Name="listbox" MinHeight = "50" AllowDrop="True" SelectionMode="Extended"/>
-        <TextBox x:Name="XMax" VerticalAlignment="Top" Text="{Binding Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Path=Maximum, Source={StaticResource `$chart.ChartAreas[0].AxisX}}" />
-        <TextBox x:Name="xMin" VerticalAlignment="Top"/>
+        <TextBox x:Name="XMax" VerticalAlignment="Top" Text="{Binding Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Path=AxisX.Maximum}" />
+        <TextBox x:Name="XMin" VerticalAlignment="Top" Text="{Binding Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Path=AxisX.Minimum}" />
     </StackPanel>
     <Viewbox Name = "VB" Stretch = "uniform"  HorizontalAlignment="Left" MinWidth="1000">
         <Canvas x:Name = "canvas1" Background="Black" Width="2000" Height="1000">
@@ -109,10 +112,13 @@ $Chart.Series[$item]["pointwidth"] = "2"
  
 $reader = (New-Object System.Xml.XmlNodeReader $xaml)
 $Window = [Windows.Markup.XamlReader]::Load( $reader )
+# $window.DataContext=$Chart.ChartAreas[0]
 
 #Connect to Control
 # $viewbox = $Window.FindName("VB")
 $viewbox = $Window.Content.FindName("VB")
+$SP = $Window.Content.FindName("SP")
+$SP.DataContext=$chart.ChartAreas[0]
 $image = $viewbox.FindName("image")
 $windowsFormsHost = $viewbox.FindName("WF")
 
@@ -139,12 +145,13 @@ $setTitle = {
 
 
 $XMax=$window.FindName("XMax")
-$setXmax={
-    $chart.ChartAreas[0].AxisX.Maximum=$XMax.Text
-    write-host "set xmax"
+$XMin=$window.FindName("XMin")
+$setImage={
     setImage
 }
-$btn.Add_Click($setXmax)
+$XMax.Add_TextChanged($setImage)
+$XMin.Add_TextChanged($setImage)
                         
-# $windowsFormsHost.Child
 $Window.ShowDialog() | Out-Null
+# $Window.Show()
+# $windowsFormsHost.Child
